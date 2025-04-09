@@ -1,0 +1,20 @@
+{
+  "name": "wizzme-backend",
+  "version": "1.0.0",
+  "description": "Backend for Wizz'Me",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "express": "^4.21.2",
+    "mongoose": "^8.13.2",
+    "socket.io": "^4.8.1",
+    "uid2": "^1.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
