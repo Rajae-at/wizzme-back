@@ -31,9 +31,16 @@ io.on("connection", (socket) => {
   console.log("🔌 Socket connecté :", socket.id);
 
   // Identification
-  socket.on("set_identity", (email) => {
-    connectedUsers[socket.id] = email;
-    console.log(`✅ ${email} connecté`);
+  socket.on("set_identity", ({ email }) => {
+    if (email) {
+      connectedUsers[socket.id] = email;
+      console.log(`✅ ${email} (Socket ID: ${socket.id}) connecté`);
+    } else {
+      console.error(
+        "Tentative d'identification échouée: Email manquant pour socket",
+        socket.id
+      );
+    }
   });
 
   // Message
@@ -64,8 +71,14 @@ io.on("connection", (socket) => {
   // Déconnexion
   socket.on("disconnect", () => {
     const email = connectedUsers[socket.id];
-    delete connectedUsers[socket.id];
-    console.log(`❌ ${email} déconnecté`);
+    if (email) {
+      delete connectedUsers[socket.id];
+      console.log(`❌ ${email} (Socket ID: ${socket.id}) déconnecté`);
+    } else {
+      console.log(
+        `❓ Socket ID ${socket.id} déconnecté (sans email associé trouvé).`
+      );
+    }
   });
 });
 
