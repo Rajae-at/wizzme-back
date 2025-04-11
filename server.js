@@ -30,37 +30,11 @@ const connectedUsers = {}; // socket.id => email
 io.on("connection", (socket) => {
   console.log("🔌 Socket connecté :", socket.id);
 
-  // Envoyer la liste initiale des utilisateurs en ligne à ce nouveau socket
-  const onlineEmails = Object.values(connectedUsers);
-  socket.emit("initial_online_users", onlineEmails);
-  console.log(`✉️ Liste initiale envoyée à ${socket.id}:`, onlineEmails);
-
   // Identification
   socket.on("set_identity", ({ email }) => {
     if (email) {
-      const previousEmail = connectedUsers[socket.id];
-      // Si l'utilisateur change d'identité (peu probable mais géré)
-      if (previousEmail && previousEmail !== email) {
-        socket.broadcast.emit("user_status_change", {
-          email: previousEmail,
-          status: "offline",
-        });
-        console.log(
-          `🔄 ${previousEmail} remplacé par ${email} pour ${socket.id}`
-        );
-      }
-
-      // Si l'utilisateur n'était pas déjà enregistré avec cet email
-      if (!Object.values(connectedUsers).includes(email)) {
-        socket.broadcast.emit("user_status_change", {
-          email,
-          status: "online",
-        });
-        console.log(`📢 ${email} est maintenant en ligne (annoncé aux autres)`);
-      }
-
       connectedUsers[socket.id] = email;
-      console.log(`✅ ${email} (Socket ID: ${socket.id}) identifié`);
+      console.log(`✅ ${email} (Socket ID: ${socket.id}) connecté`);
     } else {
       console.error(
         "Tentative d'identification échouée: Email manquant pour socket",
@@ -78,7 +52,14 @@ io.on("connection", (socket) => {
       io.to(recipientSocketId).emit("receive_message", {
         from: connectedUsers[socket.id],
         message,
+        timestamp: new Date().toISOString(),
       });
+    } else {
+      console.log(
+        `❌ Destinataire ${to} non trouvé/connecté pour message de ${
+          connectedUsers[socket.id]
+        }`
+      );
     }
   });
 
@@ -91,6 +72,12 @@ io.on("connection", (socket) => {
       io.to(recipientSocketId).emit("receive_wizz", {
         from: connectedUsers[socket.id],
       });
+    } else {
+      console.log(
+        `❌ Destinataire ${to} non trouvé/connecté pour wizz de ${
+          connectedUsers[socket.id]
+        }`
+      );
     }
   });
 
@@ -100,15 +87,6 @@ io.on("connection", (socket) => {
     if (email) {
       delete connectedUsers[socket.id];
       console.log(`❌ ${email} (Socket ID: ${socket.id}) déconnecté`);
-
-      // Vérifier si cet utilisateur a d'autres connexions actives
-      const isStillConnected = Object.values(connectedUsers).includes(email);
-
-      if (!isStillConnected) {
-        // Informer les autres utilisateurs
-        io.emit("user_status_change", { email, status: "offline" });
-        console.log(`📢 ${email} est maintenant hors ligne (annoncé à tous)`);
-      }
     } else {
       console.log(
         `❓ Socket ID ${socket.id} déconnecté (sans email associé trouvé).`
